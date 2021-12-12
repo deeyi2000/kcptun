@@ -1,6 +1,7 @@
 module github.com/xtaci/kcptun
 
 require (
+	github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5
 	github.com/coreos/go-iptables v0.4.2 // indirect
 	github.com/golang/snappy v0.0.1
 	github.com/google/gopacket v1.1.17 // indirect

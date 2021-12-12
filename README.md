@@ -1,4 +1,4 @@
-# <img src="logo.png" alt="kcptun" height="54px" /> 
+# <img src="logo.png" alt="kcptun" height="54px" /> kcptun with socks5
 
 [![Release][13]][14] [![Powered][17]][18] [![MIT licensed][11]][12] [![Build Status][3]][4] [![Go Report Card][5]][6] [![Downloads][15]][16] [![Docker][1]][2] 
 

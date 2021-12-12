@@ -15,6 +15,7 @@ import (
 
 	"golang.org/x/crypto/pbkdf2"
 
+	"github.com/armon/go-socks5"
 	"github.com/urfave/cli"
 	kcp "github.com/xtaci/kcp-go/v5"
 	"github.com/xtaci/kcptun/generic"
@@ -29,10 +30,16 @@ const (
 	maxSmuxVer = 2
 	// stream copy buffer size
 	bufSize = 4096
+	// Socks5 flag
+	Socks5Flag = "socks5"
 )
 
-// VERSION is injected by buildflags
-var VERSION = "SELFBUILD"
+var (
+	// VERSION is injected by buildflags
+	VERSION = "SELFBUILD"
+	// socks5 proxy server in self proxy mode
+	s5svr *socks5.Server
+)
 
 // handle multiplex-ed connection
 func handleMux(conn net.Conn, config *Config) {
@@ -62,6 +69,11 @@ func handleMux(conn net.Conn, config *Config) {
 		if err != nil {
 			log.Println(err)
 			return
+		}
+		if config.Target == Socks5Flag {
+			// socks5 proxy requests
+			go s5svr.ServeConn(stream)
+			continue
 		}
 
 		go func(p1 *smux.Stream) {
@@ -137,8 +149,8 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "target, t",
-			Value: "127.0.0.1:12948",
-			Usage: "target server address, or path/to/unix_socket",
+			Value: Socks5Flag,
+			Usage: "target server address:[ip:port]. [socks5] will proxy socks5 requests by itself",
 		},
 		cli.StringFlag{
 			Name:   "key",
@@ -359,6 +371,16 @@ func main() {
 		log.Println("initiating key derivation")
 		pass := pbkdf2.Key([]byte(config.Key), []byte(SALT), 4096, 32, sha1.New)
 		log.Println("key derivation done")
+
+		if config.Target == Socks5Flag {
+			// socks5 proxy server
+			conf := &socks5.Config{}
+			var err error
+			if s5svr, err = socks5.New(conf); err != nil {
+				log.Fatal(err)
+			}
+		}
+
 		var block kcp.BlockCrypt
 		switch config.Crypt {
 		case "sm4":
